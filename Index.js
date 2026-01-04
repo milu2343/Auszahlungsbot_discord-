@@ -185,13 +185,14 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 client.login(process.env.TOKEN);
-// --- Discord-Bot Setup schon vorhanden ---
-client.login(process.env.TOKEN);
-
-// --- Webserver für Uptime Robot ---
 const express = require("express");
 const app = express();
 
-app.get("/", (req, res) => res.send("Bot läuft ✅"));
+app.get("/", (req, res) => {
+  res.send("Bot läuft ✅");
+});
 
-app.listen(3000, () => console.log("HTTP-Server läuft auf Port 3000"));
+app.listen(3000, () => {
+  console.log("HTTP-Server läuft auf Port 3000");
+});
+
