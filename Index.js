@@ -17,6 +17,17 @@ const {
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
+const express = require("express");
+const app = express();
+
+app.get("/", (req, res) => {
+  res.send("Bot läuft ✅");
+});
+
+const port = process.env.PORT || 3000;
+app.listen(port);
+
+
 // Template-Daten
 let templateData = {
   title: "—",
@@ -185,14 +196,3 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 client.login(process.env.TOKEN);
-const express = require("express");
-const app = express();
-
-app.get("/", (req, res) => {
-  res.send("Bot läuft ✅");
-});
-
-app.listen(3000, () => {
-  console.log("HTTP-Server läuft auf Port 3000");
-});
-
