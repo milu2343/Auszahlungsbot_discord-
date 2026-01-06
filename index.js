@@ -146,8 +146,13 @@ client.on(Events.InteractionCreate, async interaction => {
             .setPlaceholder("Auszahlung")
             .addOptions([
               { label: "1K", value: "1K" },
-              { label: "2K", value: "2K" },
-              { label: "5K", value: "5K" }
+              { label: "5K", value: "5K" },
+              { label: "10K", value: "10K" },
+              { label: "20K", value: "20K" },
+              { label: "30K", value: "30K" },
+              { label: "40K", value: "40K" },
+              { label: "45K", value: "45K" },
+              { label: "50K", value: "50K" }
             ])
         ),
         new ActionRowBuilder().addComponents(
@@ -155,8 +160,10 @@ client.on(Events.InteractionCreate, async interaction => {
             .setCustomId(`reason_${i}`)
             .setPlaceholder("Grund")
             .addOptions([
-              { label: "Event", value: "Event" },
-              { label: "Support", value: "Support" },
+              { label: "Anfahrt", value: "Anfahrt" },
+              { label: "Kill", value: "Kill" },
+              { label: "Win", value: "Win" },
+              { label: "Panel", value: "Panel" },
               { label: "Sonstiges", value: "Sonstiges" }
             ])
         )
