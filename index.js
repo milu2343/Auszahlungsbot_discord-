@@ -212,7 +212,7 @@ client.on(Events.InteractionCreate, async interaction => {
     const embed = new EmbedBuilder()
       .setTitle(templateData.title)
       .setAuthor({ name: templateData.dateTime })
-      .setDescription(text);
+      .setDescription("*Auszahlungen könnt ihr beim Leader / Vize Leader abholen.*\n\n" + payoutText);
 
     await channel.send({ embeds: [embed] });
 
