@@ -152,7 +152,8 @@ client.on(Events.InteractionCreate, async interaction => {
               { label: "30K", value: "30K" },
               { label: "40K", value: "40K" },
               { label: "45K", value: "45K" },
-              { label: "50K", value: "50K" }
+              { label: "50K", value: "50K" },
+              { label: "Custom", value: "custom_amount" }
             ])
         ),
         new ActionRowBuilder().addComponents(
@@ -164,7 +165,8 @@ client.on(Events.InteractionCreate, async interaction => {
               { label: "Kill", value: "Kill" },
               { label: "Win", value: "Win" },
               { label: "Panel", value: "Panel" },
-              { label: "Sonstiges", value: "Sonstiges" }
+              { label: "Sonstiges", value: "Sonstiges" },
+              { label: "Custom", value: "custom_reason" }
             ])
         )
       ];
@@ -187,6 +189,87 @@ client.on(Events.InteractionCreate, async interaction => {
       });
     }
   }
+
+  // CUSTOM BETRAG → MODAL
+if (
+  interaction.isStringSelectMenu() &&
+  interaction.customId.startsWith("select_amount_") &&
+  interaction.values[0] === "custom_amount"
+) {
+  const index = Number(interaction.customId.split("_")[2]);
+
+  const modal = new ModalBuilder()
+    .setCustomId(`custom_amount_modal_${index}`)
+    .setTitle("Custom Auszahlung");
+
+  modal.addComponents(
+    new ActionRowBuilder().addComponents(
+      new TextInputBuilder()
+        .setCustomId("amount")
+        .setLabel("Betrag (z. B. 3.5K oder 12000)")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true)
+    )
+  );
+
+  await interaction.showModal(modal);
+}
+
+  // CUSTOM GRUND → MODAL
+if (
+  interaction.isStringSelectMenu() &&
+  interaction.customId.startsWith("select_reason_") &&
+  interaction.values[0] === "custom_reason"
+) {
+  const index = Number(interaction.customId.split("_")[2]);
+
+  const modal = new ModalBuilder()
+    .setCustomId(`custom_reason_modal_${index}`)
+    .setTitle("Custom Grund");
+
+  modal.addComponents(
+    new ActionRowBuilder().addComponents(
+      new TextInputBuilder()
+        .setCustomId("reason")
+        .setLabel("Grund eingeben")
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true)
+    )
+  );
+
+  await interaction.showModal(modal);
+}
+
+  if (
+  interaction.isModalSubmit() &&
+  interaction.customId.startsWith("custom_amount_modal_")
+) {
+  const index = Number(interaction.customId.split("_")[3]);
+  const amount = interaction.fields.getTextInputValue("amount");
+
+  templateData.participants[index].amount = amount;
+
+  await interaction.reply({
+    content: `💰 Betrag gespeichert: **${amount}**`,
+    ephemeral: true
+  });
+}
+
+  if (
+  interaction.isModalSubmit() &&
+  interaction.customId.startsWith("custom_reason_modal_")
+) {
+  const index = Number(interaction.customId.split("_")[3]);
+  const reason = interaction.fields.getTextInputValue("reason");
+
+  templateData.participants[index].reason = reason;
+
+  await interaction.reply({
+    content: `📄 Grund gespeichert: **${reason}**`,
+    ephemeral: true
+  });
+}
+
 
   if (interaction.isUserSelectMenu() && interaction.customId.startsWith("user_")) {
     const i = Number(interaction.customId.split("_")[1]);
