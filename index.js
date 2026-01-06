@@ -21,7 +21,7 @@ const express = require("express");
 
 // ================== DISCORD CLIENT ==================
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds]
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
 });
 
 // ================== TEMPLATE DATEN ==================
@@ -41,7 +41,7 @@ client.once(Events.ClientReady, () => {
 // ================== INTERACTIONS ==================
 client.on(Events.InteractionCreate, async interaction => {
 
-  // /template Command
+  // ---------------- /template Command ----------------
   if (interaction.isChatInputCommand() && interaction.commandName === "template") {
     const embed = new EmbedBuilder()
       .setTitle(templateData.title)
@@ -64,44 +64,41 @@ client.on(Events.InteractionCreate, async interaction => {
         new StringSelectMenuBuilder()
           .setCustomId("select_count")
           .setPlaceholder("👥 Teilnehmerzahl")
-          .addOptions(
-            [...Array(20).keys()].map(i => ({
-              label: `${i + 1} Teilnehmer`,
-              value: `${i + 1}`
-            }))
-          )
+          .addOptions([...Array(20).keys()].map(i => ({
+            label: `${i + 1} Teilnehmer`,
+            value: `${i + 1}`
+          })))
       )
     ];
 
     return interaction.reply({ embeds: [embed], components: rows });
   }
 
-  // Titel / Datum Modal
+  // ---------------- Titel / Datum Modal ----------------
   if (interaction.isButton() && interaction.customId === "edit_info") {
     const modal = new ModalBuilder()
       .setCustomId("info_modal")
-      .setTitle("Event Infos");
-
-    modal.addComponents(
-      new ActionRowBuilder().addComponents(
-        new TextInputBuilder()
-          .setCustomId("title")
-          .setLabel("Titel")
-          .setStyle(TextInputStyle.Short)
-      ),
-      new ActionRowBuilder().addComponents(
-        new TextInputBuilder()
-          .setCustomId("date")
-          .setLabel("Datum")
-          .setStyle(TextInputStyle.Short)
-      ),
-      new ActionRowBuilder().addComponents(
-        new TextInputBuilder()
-          .setCustomId("time")
-          .setLabel("Uhrzeit")
-          .setStyle(TextInputStyle.Short)
-      )
-    );
+      .setTitle("Event Infos")
+      .addComponents(
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId("title")
+            .setLabel("Titel")
+            .setStyle(TextInputStyle.Short)
+        ),
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId("date")
+            .setLabel("Datum")
+            .setStyle(TextInputStyle.Short)
+        ),
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId("time")
+            .setLabel("Uhrzeit")
+            .setStyle(TextInputStyle.Short)
+        )
+      );
 
     return interaction.showModal(modal);
   }
@@ -114,13 +111,13 @@ client.on(Events.InteractionCreate, async interaction => {
     return interaction.reply({ content: "✅ Gespeichert", ephemeral: true });
   }
 
-  // Ziel-Channel
+  // ---------------- Ziel-Channel ----------------
   if (interaction.isChannelSelectMenu() && interaction.customId === "select_channel") {
     templateData.targetChannel = interaction.values[0];
     return interaction.reply({ content: "📍 Channel gesetzt", ephemeral: true });
   }
 
-  // Teilnehmerzahl
+  // ---------------- Teilnehmerzahl ----------------
   if (interaction.isStringSelectMenu() && interaction.customId === "select_count") {
     templateData.participantCount = Number(interaction.values[0]);
     templateData.participants = Array.from(
@@ -128,10 +125,7 @@ client.on(Events.InteractionCreate, async interaction => {
       () => ({ user: null, amount: null, reason: null })
     );
 
-    await interaction.reply({
-      content: `👥 Teilnehmer: ${templateData.participantCount}`,
-      ephemeral: true
-    });
+    await interaction.deferReply({ ephemeral: true });
 
     for (let i = 0; i < templateData.participantCount; i++) {
       const rows = [
@@ -171,6 +165,7 @@ client.on(Events.InteractionCreate, async interaction => {
         )
       ];
 
+      // Fertig-Button nur beim letzten Teilnehmer
       if (i === templateData.participantCount - 1) {
         rows.push(
           new ActionRowBuilder().addComponents(
@@ -183,94 +178,64 @@ client.on(Events.InteractionCreate, async interaction => {
       }
 
       await interaction.followUp({
-        content: `Teilnehmer ${i + 1}`,
+        content: `Teilnehmer ${i + 1} auswählen:`,
         components: rows,
         ephemeral: true
       });
     }
   }
 
-  // CUSTOM BETRAG → MODAL
-if (
-  interaction.isStringSelectMenu() &&
-  interaction.customId.startsWith("amount_") &&
-  interaction.values[0] === "custom_amount"
-) {
-  const index = Number(interaction.customId.split("_")[2]);
+  // ---------------- CUSTOM MODALS ----------------
+  if (interaction.isStringSelectMenu() && interaction.customId.startsWith("amount_") && interaction.values[0] === "custom_amount") {
+    const index = Number(interaction.customId.split("_")[1]);
+    const modal = new ModalBuilder()
+      .setCustomId(`custom_amount_modal_${index}`)
+      .setTitle("Custom Auszahlung")
+      .addComponents(
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId("amount")
+            .setLabel("Betrag eingeben")
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true)
+        )
+      );
+    await interaction.showModal(modal);
+  }
 
-  const modal = new ModalBuilder()
-    .setCustomId(`custom_amount_modal_${index}`)
-    .setTitle("Custom Auszahlung");
+  if (interaction.isStringSelectMenu() && interaction.customId.startsWith("reason_") && interaction.values[0] === "custom_reason") {
+    const index = Number(interaction.customId.split("_")[1]);
+    const modal = new ModalBuilder()
+      .setCustomId(`custom_reason_modal_${index}`)
+      .setTitle("Custom Grund")
+      .addComponents(
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId("reason")
+            .setLabel("Grund eingeben")
+            .setStyle(TextInputStyle.Paragraph)
+            .setRequired(true)
+        )
+      );
+    await interaction.showModal(modal);
+  }
 
-  modal.addComponents(
-    new ActionRowBuilder().addComponents(
-      new TextInputBuilder()
-        .setCustomId("amount")
-        .setLabel("Betrag (z. B. 3.5K oder 12000)")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true)
-    )
-  );
+  // ---------------- MODAL SUBMITS ----------------
+  if (interaction.isModalSubmit() && interaction.customId.startsWith("custom_amount_modal_")) {
+    const index = Number(interaction.customId.split("_")[3]);
+    const amount = interaction.fields.getTextInputValue("amount");
+    templateData.participants[index].amount = amount;
+    await interaction.deferUpdate();
+  }
 
-  await interaction.showModal(modal);
-}
+  if (interaction.isModalSubmit() && interaction.customId.startsWith("custom_reason_modal_")) {
+    const index = Number(interaction.customId.split("_")[3]);
+    const reason = interaction.fields.getTextInputValue("reason");
+    templateData.participants[index].reason = reason;
+    await interaction.deferUpdate();
+  }
 
-  // CUSTOM GRUND → MODAL
-if (
-  interaction.isStringSelectMenu() &&
-  interaction.customId.startsWith("reason_") &&
-  interaction.values[0] === "custom_reason"
-) {
-  const index = Number(interaction.customId.split("_")[2]);
-
-  const modal = new ModalBuilder()
-    .setCustomId(`custom_reason_modal_${index}`)
-    .setTitle("Custom Grund");
-
-  modal.addComponents(
-    new ActionRowBuilder().addComponents(
-      new TextInputBuilder()
-        .setCustomId("reason")
-        .setLabel("Grund eingeben")
-        .setStyle(TextInputStyle.Paragraph)
-        .setRequired(true)
-    )
-  );
-
-  await interaction.showModal(modal);
-}
-
-  if (
-  interaction.isModalSubmit() &&
-  interaction.customId.startsWith("custom_amount_modal_")
-) {
-  const index = Number(interaction.customId.split("_")[3]);
-  const amount = interaction.fields.getTextInputValue("amount");
-
-  templateData.participants[index].amount = amount;
-
-  await interaction.reply({
-    content: `💰 Betrag gespeichert: **${amount}**`,
-    ephemeral: true
-  });
-}
-
-  if (
-  interaction.isModalSubmit() &&
-  interaction.customId.startsWith("custom_reason_modal_")
-) {
-  const index = Number(interaction.customId.split("_")[3]);
-  const reason = interaction.fields.getTextInputValue("reason");
-
-  templateData.participants[index].reason = reason;
-
-  await interaction.reply({
-    content: `📄 Grund gespeichert: **${reason}**`,
-    ephemeral: true
-  });
-}
-
-
+  // ---------------- USER / AMOUNT / REASON ----------------
   if (interaction.isUserSelectMenu() && interaction.customId.startsWith("user_")) {
     const i = Number(interaction.customId.split("_")[1]);
     templateData.participants[i].user = `<@${interaction.values[0]}>`;
@@ -289,11 +254,10 @@ if (
     return interaction.deferUpdate();
   }
 
+  // ---------------- FINISH BUTTON ----------------
   if (interaction.isButton() && interaction.customId === "finish") {
     const channel = interaction.guild.channels.cache.get(templateData.targetChannel);
-    if (!channel) {
-      return interaction.reply({ content: "❌ Kein Channel", ephemeral: true });
-    }
+    if (!channel) return interaction.reply({ content: "❌ Kein Channel", ephemeral: true });
 
     const text = templateData.participants
       .map(p => `• ${p.user} – ${p.amount} (${p.reason})`)
@@ -306,16 +270,11 @@ if (
 
     await channel.send({ embeds: [embed] });
 
-    templateData = {
-      title: "—",
-      dateTime: "—",
-      targetChannel: null,
-      participantCount: 0,
-      participants: []
-    };
+    templateData = { title: "—", dateTime: "—", targetChannel: null, participantCount: 0, participants: [] };
 
     return interaction.reply({ content: "✅ Gesendet", ephemeral: true });
   }
+
 });
 
 // ================== LOGIN ==================
@@ -323,12 +282,7 @@ client.login(process.env.TOKEN);
 
 // ================== EXPRESS (UPTIME) ==================
 const app = express();
-
-app.get("/", (req, res) => {
-  res.send("Bot läuft ✅");
-});
+app.get("/", (req, res) => res.send("Bot läuft ✅"));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🌍 Webserver läuft auf Port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`🌍 Webserver läuft auf Port ${PORT}`));
