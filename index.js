@@ -193,7 +193,7 @@ client.on(Events.InteractionCreate, async interaction => {
   // CUSTOM BETRAG → MODAL
 if (
   interaction.isStringSelectMenu() &&
-  interaction.customId.startsWith("select_amount_") &&
+  interaction.customId.startsWith("amount_") &&
   interaction.values[0] === "custom_amount"
 ) {
   const index = Number(interaction.customId.split("_")[2]);
@@ -218,7 +218,7 @@ if (
   // CUSTOM GRUND → MODAL
 if (
   interaction.isStringSelectMenu() &&
-  interaction.customId.startsWith("select_reason_") &&
+  interaction.customId.startsWith("reason_") &&
   interaction.values[0] === "custom_reason"
 ) {
   const index = Number(interaction.customId.split("_")[2]);
