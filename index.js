@@ -140,7 +140,6 @@ for (let i = 0; i < templateData.participantCount; i++) {
     components: rows, // deine Auswahl-Buttons/SelectMenus
     ephemeral: true
   });
-}
 
 
     for (let i = 0; i < templateData.participantCount; i++) {
