@@ -128,19 +128,10 @@ client.on(Events.InteractionCreate, async interaction => {
       () => ({ user: null, amount: null, reason: null })
     );
 
-    await interaction.deferReply({ ephemeral: true }); // "Ich antworte gleich"
-
-await interaction.followUp({
-  content: `👥 Teilnehmer: ${templateData.participantCount}`
-});
-
-for (let i = 0; i < templateData.participantCount; i++) {
-  await interaction.followUp({
-    content: `Teilnehmer ${i + 1}`,
-    components: rows, // deine Auswahl-Buttons/SelectMenus
-    ephemeral: true
-  });
-
+    await interaction.reply({
+      content: `👥 Teilnehmer: ${templateData.participantCount}`,
+      ephemeral: true
+    });
 
     for (let i = 0; i < templateData.participantCount; i++) {
       const rows = [
